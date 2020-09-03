@@ -1,2 +1,2 @@
 # student-manager
-Student Manager
+Student Manager Backend Application using Spring Boot
