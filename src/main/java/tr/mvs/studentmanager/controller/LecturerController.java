@@ -6,20 +6,20 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tr.mvs.studentmanager.model.Lecturer;
-import tr.mvs.studentmanager.repository.LecturerRepository;
+import tr.mvs.studentmanager.service.LecturerService;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class LecturerController {
 
     @Autowired
-    private LecturerRepository lecturerRepository;
+    private LecturerService lecturerService;
 
     @GetMapping(value = "/lecturers")
     public ResponseEntity<List<Lecturer>> getAllLecturers() {
-        List<Lecturer> lecturers = this.lecturerRepository.findAll();
+        List<Lecturer> lecturers = this.lecturerService.getLecturers();
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -28,14 +28,14 @@ public class LecturerController {
     }
 
     @GetMapping(value = "/lecturers/{id}")
-    public ResponseEntity<Lecturer> getLecturerById(@PathVariable(name = "id", required = true) Long id) {
-        Optional<Lecturer> optionalLecturer = this.lecturerRepository.findById(id);
+    public ResponseEntity<Lecturer> getLecturerById(@PathVariable(name = "id") Long id) {
+        Lecturer lecturer = this.lecturerService.getLecturerById(id);
 
-        if (optionalLecturer.isPresent()) {
+        if (lecturer != null) {
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(optionalLecturer.get());
+                    .body(lecturer);
         } else {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
@@ -45,24 +45,24 @@ public class LecturerController {
 
     @DeleteMapping(value = "/lecturers")
     public ResponseEntity<Lecturer> deleteAllLecturers() {
-        this.lecturerRepository.deleteAll();
+        this.lecturerService.deleteLecturers();
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .build();
     }
 
-    @DeleteMapping(value = "lecturers/{id}")
-    public ResponseEntity<Lecturer> deleteLecturerById(@PathVariable(name = "id", required = true) Long id) {
-        Optional<Lecturer> optionalLecturer = this.lecturerRepository.findById(id);
+    @DeleteMapping(value = "/lecturers/{id}")
+    public ResponseEntity<Lecturer> deleteLecturerById(@PathVariable(name = "id") Long id) {
+        Lecturer lecturer = this.lecturerService.getLecturerById(id);
 
-        if (optionalLecturer.isPresent()) {
-            this.lecturerRepository.deleteById(id);
+        if (lecturer != null) {
+            this.lecturerService.deleteLecturerById(id);
 
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(optionalLecturer.get());
+                    .body(lecturer);
         } else {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
@@ -72,11 +72,72 @@ public class LecturerController {
 
     @PostMapping(value = "/lecturers")
     public ResponseEntity<Lecturer> createLecturer(@RequestBody Lecturer lecturer) {
-        Lecturer savedLecturer = this.lecturerRepository.save(lecturer);
+        Lecturer savedLecturer = this.lecturerService.saveLecturer(lecturer);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(savedLecturer);
+    }
+
+    @PutMapping(value = "/lecturers/{id}")
+    public ResponseEntity<Lecturer> updateLecturer(@PathVariable(name = "id") Long id,
+                                                   @RequestBody Lecturer lecturer) {
+        Lecturer lecturerOnDb = this.lecturerService.getLecturerById(id);
+
+        if (lecturerOnDb != null) {
+
+            lecturerOnDb.setFirstName(lecturer.getFirstName());
+            lecturerOnDb.setLastName(lecturer.getLastName());
+            lecturerOnDb.setLectures(lecturer.getLectures());
+
+            Lecturer savedLecturer = this.lecturerService.saveLecturer(lecturerOnDb);
+
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(savedLecturer);
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .build();
+        }
+
+    }
+
+    @GetMapping(value = "/lecturers/search")
+    public ResponseEntity<List<Lecturer>> searchLecturers(@RequestParam(name = "firstname", required = false) String firstName,
+                                                          @RequestParam(name = "lastname", required = false) String lastName) {
+        List<Lecturer> allLecturers = this.lecturerService.getLecturers();
+
+        List<Lecturer> foundLecturers = new ArrayList<>();
+
+        if (firstName != null && lastName != null) {
+            for (Lecturer lecturer : allLecturers) {
+                if (lecturer.getFirstName().toLowerCase().contains(firstName.toLowerCase())
+                        && lecturer.getLastName().toLowerCase().contains(lastName.toLowerCase())) {
+                    foundLecturers.add(lecturer);
+                }
+            }
+        } else if (firstName != null) {
+            for (Lecturer lecturer : allLecturers) {
+                if (lecturer.getFirstName().toLowerCase().contains(firstName.toLowerCase())) {
+                    foundLecturers.add(lecturer);
+                }
+            }
+        } else if (lastName != null) {
+            for (Lecturer lecturer : allLecturers) {
+                if (lecturer.getLastName().toLowerCase().contains(lastName.toLowerCase())) {
+                    foundLecturers.add(lecturer);
+                }
+            }
+        } else {
+            foundLecturers = allLecturers;
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(foundLecturers);
     }
 }

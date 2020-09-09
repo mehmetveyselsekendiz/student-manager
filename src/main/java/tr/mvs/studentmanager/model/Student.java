@@ -10,10 +10,10 @@ public class Student {
     @GeneratedValue
     private Long id;
 
-    @Column(name = "first_name")
+    @Column(name = "first_name", length = 50, nullable = false)
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "last_name", length = 50, nullable = false)
     private String lastName;
 
     public Student() {
@@ -41,5 +41,14 @@ public class Student {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id=" + id +
+                ", firstName='" + firstName + "'" +
+                ", lastName='" + lastName + "'" +
+                '}';
     }
 }

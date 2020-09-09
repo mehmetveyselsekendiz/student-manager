@@ -1,5 +1,7 @@
 package tr.mvs.studentmanager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 
 @Entity
@@ -10,11 +12,15 @@ public class Lecture {
     @GeneratedValue
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", length = 50, nullable = false)
     private String name;
 
-    @Column(name = "credit")
+    @Column(name = "credit", nullable = false)
     private Integer credit;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Lecturer lecturer;
 
     public Lecture() {
     }
@@ -41,5 +47,23 @@ public class Lecture {
 
     public void setCredit(Integer credit) {
         this.credit = credit;
+    }
+
+    public Lecturer getLecturer() {
+        return lecturer;
+    }
+
+    public void setLecturer(Lecturer lecturer) {
+        this.lecturer = lecturer;
+    }
+
+    @Override
+    public String toString() {
+        return "Lecture{" +
+                "id=" + id +
+                ", name='" + name + "'" +
+                ", credit=" + credit +
+                ", lecturer=" + lecturer +
+                '}';
     }
 }
